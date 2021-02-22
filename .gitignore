@@ -2,3 +2,5 @@
 builds/
 
 MicSwitcher.pro.user
+
+*.autosave
