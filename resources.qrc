@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/Resources/Icons">
+        <file alias="MicMutedLight">Resources/Icons/MicMutedLight.png</file>
+        <file alias="MicUnmutedLight">Resources/Icons/MicUnmutedLight.png</file>
+        <file alias="MicMutedDark">Resources/Icons/MicMutedDark.png</file>
+        <file alias="MicMuted">Resources/Icons/MicMuted.png</file>
+        <file alias="MicUnmuted">Resources/Icons/MicUnmuted.png</file>
+        <file alias="MicUnmutedDark">Resources/Icons/MicUnmutedDark.png</file>
+    </qresource>
+</RCC>
