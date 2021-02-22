@@ -3,6 +3,8 @@
 
 #include <QSystemTrayIcon>
 
+class QAction;
+
 class MicSwitcher : public QObject
 {
 	Q_OBJECT
@@ -23,6 +25,7 @@ public slots:
 	void showSettingsDialog();
 	void disableMic(); //inline
 	void enableMic(); //inline
+	void switchMic();
 	void setMicEnabled(const bool enabled);
 	inline void setShowNotifications(const bool show = true);
 	void setIconStyle(const IconStyle style);
@@ -45,6 +48,7 @@ private:
 	int m_timerId = 0;
 	int m_timerInterval = 0;
 	QSystemTrayIcon *m_trayIcon = nullptr;
+	QAction *m_enableMicAcrion = nullptr;
 	int m_hotkeyCounter = 0;
 	int m_showNotifications = false;
 	IconStyle m_iconStyle = Light;
@@ -52,6 +56,8 @@ private:
 };
 
 
+
+//public slots:
 
 inline void MicSwitcher::killTimer()
 {
@@ -79,6 +85,11 @@ inline void MicSwitcher::disableMic()
 inline void MicSwitcher::enableMic()
 {
 	setMicEnabled(true);
+}
+
+inline void MicSwitcher::switchMic()
+{
+	setMicEnabled(!m_isMicEnabled);
 }
 
 #endif // MICSWITCHER_H

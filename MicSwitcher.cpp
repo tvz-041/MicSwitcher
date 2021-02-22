@@ -106,6 +106,7 @@ void MicSwitcher::onMicSwitched(const bool isMicEnabled)
 {
 	m_isMicEnabled = isMicEnabled;
 	updateTrayIcon();
+	m_enableMicAcrion->setText(m_isMicEnabled ? tr("Disable microphone") : tr("Enable microphone"));
 }
 
 void MicSwitcher::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
@@ -127,6 +128,8 @@ void MicSwitcher::initTrayContextMenu()
 	QMenu *trayContextMenu = new QMenu();
 	QMenu *menu;
 	QAction *action;
+
+	m_enableMicAcrion = trayContextMenu->addAction("", this,  &MicSwitcher::switchMic);
 
 	action = trayContextMenu->addAction(tr("Show notifications"), this,  &MicSwitcher::setShowNotifications);
 	action->setCheckable(true);
