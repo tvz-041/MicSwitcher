@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QDebug>
 #include <QMenu>
+#include <QProcess>
 #include <QTimer>
 
 #include "HotkeyHandler.h"
@@ -142,6 +143,10 @@ void MicSwitcher::initTrayContextMenu()
 	//trayContextMenu->addAction(tr("Settings"), this,  &MicSwitcher::showSettingsDialog);
 
 	trayContextMenu->addAction(tr("Quit"), &QApplication::quit);
+	trayContextMenu->addAction(tr("Restart"), []{
+		QProcess::startDetached(QApplication::arguments()[0], QApplication::arguments());
+		QApplication::quit();
+	});
 
 	m_trayIcon->setContextMenu(trayContextMenu);
 }
