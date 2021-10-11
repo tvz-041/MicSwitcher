@@ -115,11 +115,9 @@ void MicSwitcher::stopTimer()
 void MicSwitcher::showSettingsDialog()
 {
 	//TODO: implement settings dialog
-    SettingsDialog dialog(m_settings);
-
-	connect(&dialog, &SettingsDialog::trayIconStyleChanged, this, &MicSwitcher::setTrayIconStyle);
-
-	dialog.exec();
+//    SettingsDialog dialog(m_settings);
+//    connect(&dialog, &SettingsDialog::trayIconStyleChanged, this, &MicSwitcher::setTrayIconStyle);
+//    dialog.exec();
 }
 
 inline void MicSwitcher::switchMic()
