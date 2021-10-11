@@ -3,6 +3,13 @@
 
 #include <QSystemTrayIcon>
 
+#include "Settings.h"
+
+namespace std
+{
+    template<typename _Signature> class function;
+}
+
 class QAction;
 
 class MicSwitcher : public QObject
@@ -10,62 +17,54 @@ class MicSwitcher : public QObject
 	Q_OBJECT
 
 public:
-	enum IconStyle
-	{
-		Light = 0,
-		Dark = 1
-	};
-
 	MicSwitcher();
-	~MicSwitcher() = default;
+    ~MicSwitcher();
+
+    void loadSettings();
+
+    void startTimer(const int msecs, std::function<void()> timeoutFunction);
+    void stopTimer();
 
 public slots:
-	void killTimer(); //inline
 	inline void show();
 	void showSettingsDialog();
 	void disableMic(); //inline
 	void enableMic(); //inline
 	void switchMic();
 	void setMicEnabled(const bool enabled);
+    void setOverrideVolumeOnSwitch(const bool override = true);
 	inline void setShowNotifications(const bool show = true);
-	void setIconStyle(const IconStyle style);
-
-protected:
-	void timerEvent(QTimerEvent *event) override;
+	void setTrayIconStyle(const Settings::IconStyle style);
 
 private slots:
 	void onHotkeyPressed();
 	void onHotkeyReleased();
 
 	void onMicSwitched(const bool isMicEnabled);
+    void onMicVolumeChanged(const float micVolume);
 	void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
 
 private:
-	void initTrayContextMenu();
+	void initTray();
 	QIcon iconWithCurrentStyle(const QString &iconPath);
 	void updateTrayIcon();
 
-	int m_timerId = 0;
-	int m_timerInterval = 0;
+    QTimer *m_timer = nullptr;
+    QMetaObject::Connection m_timerConnection;
+    int m_timerId = 0;
 	QSystemTrayIcon *m_trayIcon = nullptr;
-	QAction *m_enableMicAcrion = nullptr;
-	int m_hotkeyCounter = 0;
-	int m_showNotifications = false;
-	IconStyle m_iconStyle = Light;
-	bool m_isMicEnabled;
+    QAction *m_enableMicAction = nullptr;
+    QAction *m_overrideVolumeAction = nullptr;
+    QAction *m_showNotificationsAction = nullptr;
+    int m_hotkeyCounter = 0;
+    bool m_isMicEnabled;
+
+	Settings m_settings;
 };
 
 
 
 //public slots:
-
-inline void MicSwitcher::killTimer()
-{
-	if (m_timerId) {
-		QObject::killTimer(m_timerId);
-		m_timerId = 0;
-	}
-}
 
 inline void MicSwitcher::show()
 {
@@ -74,7 +73,7 @@ inline void MicSwitcher::show()
 
 inline void MicSwitcher::setShowNotifications(const bool show)
 {
-	m_showNotifications = show;
+	m_settings.setUseNotifications(show);
 }
 
 inline void MicSwitcher::disableMic()
