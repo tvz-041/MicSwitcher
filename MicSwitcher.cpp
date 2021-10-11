@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QMenu>
 #include <QProcess>
+#include <QSettings>
 #include <QTimer>
 
 #include "HotkeyHandler.h"
@@ -13,11 +14,22 @@
 
 #include "MicSwitcher.h"
 
-MicSwitcher::MicSwitcher()
-{
-    m_timer = new QTimer(this);
-    m_timer->setSingleShot(true);
+//TODO: implement
+//class RestartableTimer : public QTimer
+//{
+//public:
+//    void start(void (*timeoutFunction)());
+//    void start(const int msecs, void (*timeoutFunction)());
+//    void stop();
+//private:
+//    QMetaObject::Connection m_connection;
+//};
 
+MicSwitcher::MicSwitcher() :
+    m_timer(new QTimer(this)),
+    m_settings(new QSettings(QString("settings.ini"), QSettings::IniFormat, this))
+{
+    m_timer->setSingleShot(true);
 	QApplication::setWindowIcon(QIcon(":/Resources/Icons/MicMutedDark"));
 
 	initTray();
@@ -30,19 +42,12 @@ MicSwitcher::MicSwitcher()
 
     //FIXME: remove code block below
     {
-        m_settings.setMicVolume(0.9);
-        m_settings.setReleaseDelay(300);
-        m_settings.setOverrideVolume();
-        m_settings.setMicStateChangeOnStartup(Settings::MicStateChange::SetDisable);
         HotkeyHandler::instance().addHotkey(Hotkey(Qt::BackButton));
         HotkeyHandler::instance().addHotkey(Hotkey(Qt::ForwardButton));
     }
 
     loadSettings();
-}
 
-void MicSwitcher::loadSettings()
-{
     switch(m_settings.micStateChangeOnStartup()) {
         case Settings::MicStateChange::SetEnable:
             enableMic();
@@ -55,14 +60,28 @@ void MicSwitcher::loadSettings()
         default:
         break;
     }
+}
 
-    m_overrideVolumeAction->setChecked(m_settings.overrideVolume());
-    m_showNotificationsAction->setChecked(m_settings.showNotifications());
+void MicSwitcher::loadSettings()
+{
+    setMicEnabled(m_settings.isMicEnabled());
+    setOverrideVolume(m_settings.overrideVolume());
+    setShowNotifications(m_settings.showNotifications());
+    setTrayIconStyle(m_settings.trayIconStyle());
+}
+
+void MicSwitcher::loadSettings(const Settings &settings)
+{
+    if (m_settings != settings) {
+        m_settings = settings;
+        loadSettings();
+    }
 }
 
 MicSwitcher::~MicSwitcher()
 {
     stopTimer();
+    m_settings.saveToDisk();
 }
 
 void MicSwitcher::startTimer(const int msecs, std::function<void()> timeoutFunction)
@@ -95,11 +114,16 @@ void MicSwitcher::stopTimer()
 void MicSwitcher::showSettingsDialog()
 {
 	//TODO: implement settings dialog
-	SettingsDialog dialog(m_settings);
+    SettingsDialog dialog(m_settings);
 
 	connect(&dialog, &SettingsDialog::trayIconStyleChanged, this, &MicSwitcher::setTrayIconStyle);
 
 	dialog.exec();
+}
+
+inline void MicSwitcher::switchMic()
+{
+    setMicEnabled(!m_settings.isMicEnabled());
 }
 
 void MicSwitcher::setMicEnabled(const bool enabled)
@@ -108,18 +132,23 @@ void MicSwitcher::setMicEnabled(const bool enabled)
     onMicSwitched(enabled);
 }
 
-void MicSwitcher::setOverrideVolumeOnSwitch(const bool override)
+void MicSwitcher::setOverrideVolume(const bool override)
 {
     m_settings.setOverrideVolume(override);
+    m_overrideVolumeAction->setChecked(m_settings.overrideVolume());
     onMicVolumeChanged(MicHandler::instance().micVolume());
+}
+
+void MicSwitcher::setShowNotifications(const bool show)
+{
+    m_settings.setShowNotifications(show);
+    m_showNotificationsAction->setChecked(show);
 }
 
 void MicSwitcher::setTrayIconStyle(const Settings::IconStyle style)
 {
-    if (m_settings.trayIconStyle() != style) {
-        m_settings.setTrayIconStyle(style);
-		updateTrayIcon();
-	}
+    m_settings.setTrayIconStyle(style);
+    updateTrayIcon();
 }
 
 //private slots:
@@ -157,9 +186,9 @@ void MicSwitcher::onHotkeyReleased()
 
 void MicSwitcher::onMicSwitched(const bool isMicEnabled)
 {
-	m_isMicEnabled = isMicEnabled;
+    m_settings.setMicEnabled(isMicEnabled);
 	updateTrayIcon();
-    m_enableMicAction->setText(m_isMicEnabled ? tr("Disable microphone") : tr("Enable microphone"));
+    m_enableMicAction->setText(isMicEnabled ? tr("Disable microphone") : tr("Enable microphone"));
 }
 
 void MicSwitcher::onMicVolumeChanged(const float micVolume)
@@ -194,7 +223,7 @@ void MicSwitcher::initTray()
     m_enableMicAction = trayContextMenu->addAction("", this,  &MicSwitcher::switchMic);
 
     m_overrideVolumeAction = trayContextMenu->addAction(tr("Override volume"), this,
-                                        &MicSwitcher::setOverrideVolumeOnSwitch);
+                                        &MicSwitcher::setOverrideVolume);
     m_overrideVolumeAction->setCheckable(true);
 
     m_showNotificationsAction = trayContextMenu->addAction(tr("Show notifications"), this,
@@ -234,7 +263,7 @@ QIcon MicSwitcher::iconWithCurrentStyle(const QString &iconPath)
 
 void MicSwitcher::updateTrayIcon()
 {
-	if (m_isMicEnabled) {
+    if (m_settings.isMicEnabled()) {
 		m_trayIcon->setIcon(iconWithCurrentStyle(":/Resources/Icons/MicUnmuted"));
 	} else {
 		m_trayIcon->setIcon(iconWithCurrentStyle(":/Resources/Icons/MicMuted"));

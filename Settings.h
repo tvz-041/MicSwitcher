@@ -1,10 +1,14 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#include <QFlags>
+#include <QObject>
+
+class QSettings;
 
 class Settings
 {
+    Q_GADGET
+
 public:
 	enum MicStateChange
 	{
@@ -12,17 +16,23 @@ public:
 		SetEnable,
 		SetDisable
 	};
+    Q_ENUM(MicStateChange)
+
 	enum OperatingMode
 	{
 		Switch,
 		PushToTalk,
 		PushToMute
 	};
+    Q_ENUM(OperatingMode)
+
 	enum IconStyle
 	{
 		Light,
 		Dark
 	};
+    Q_ENUM(IconStyle)
+
 	enum NotificationsFlag
 	{
 		Enabled = 1,
@@ -30,13 +40,15 @@ public:
 		SoundOnSelfSwitches = 1 << 2,
 		ShowOnOtherSwitches = 1 << 3,
 		SoundOnOtherSwitches = 1 << 4,
-	};
+    };
+    Q_DECLARE_FLAGS(NotificationsFlags, NotificationsFlag);
 
-	Q_DECLARE_FLAGS(NotificationsFlags, NotificationsFlag);
+    Settings(QSettings *settings = nullptr);
+    ~Settings();
+    Settings(const Settings &other);
 
-	Settings() = default;
-	~Settings() = default;
-	Settings(const Settings &other) = default;
+    void loadFromDisk();
+    void saveToDisk() const;
 
     inline bool isMicEnabled() const;
     inline bool isNeedToOverrideVolume(const float micVolume) const;
@@ -67,7 +79,7 @@ public:
     inline void setMicStateChangeOnStartup(MicStateChange stateChange);
     inline void setOperatingMode(OperatingMode mode);
 
-    inline void setUseNotifications(const bool enabled = true);
+    inline void setShowNotifications(const bool enabled = true);
 	inline void setShowNotificationsOnSelfSwitches(const bool enabled = true);
 	inline void setPlaySoundOnSelfSwitches(const bool enabled = true);
 	inline void setShowNotificationsOnOtherSwitches(const bool enabled = true);
@@ -75,12 +87,17 @@ public:
 
     inline void setTrayIconStyle(IconStyle style);
 
-	Settings &operator=(const Settings &other) = default;
+    Settings &operator=(const Settings &other);
 	bool operator==(const Settings &other) const;
 	bool operator!=(const Settings &other) const; //inline
 
 private:
+    bool readValue(QVariant &value, const QString &key) const;
     friend class SettingsDialog;
+
+    QSettings *m_settings = nullptr;
+
+    QString *m_lang = nullptr;
 
     bool m_isMicEnabled                         = true;
     float m_micVolume                           = 1.0;
@@ -211,7 +228,7 @@ inline void Settings::setOperatingMode(OperatingMode mode)
     m_operatingMode = mode;
 }
 
-inline void Settings::setUseNotifications(const bool enabled)
+inline void Settings::setShowNotifications(const bool enabled)
 {
     m_notificationsFlags.setFlag(NotificationsFlag::Enabled, enabled);
 }

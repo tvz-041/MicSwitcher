@@ -21,6 +21,7 @@ public:
     ~MicSwitcher();
 
     void loadSettings();
+    void loadSettings(const Settings &settings);
 
     void startTimer(const int msecs, std::function<void()> timeoutFunction);
     void stopTimer();
@@ -32,8 +33,8 @@ public slots:
 	void enableMic(); //inline
 	void switchMic();
 	void setMicEnabled(const bool enabled);
-    void setOverrideVolumeOnSwitch(const bool override = true);
-	inline void setShowNotifications(const bool show = true);
+    void setOverrideVolume(const bool override = true);
+    void setShowNotifications(const bool show = true);
 	void setTrayIconStyle(const Settings::IconStyle style);
 
 private slots:
@@ -51,15 +52,13 @@ private:
 
     QTimer *m_timer = nullptr;
     QMetaObject::Connection m_timerConnection;
-    int m_timerId = 0;
 	QSystemTrayIcon *m_trayIcon = nullptr;
     QAction *m_enableMicAction = nullptr;
     QAction *m_overrideVolumeAction = nullptr;
     QAction *m_showNotificationsAction = nullptr;
     int m_hotkeyCounter = 0;
-    bool m_isMicEnabled;
 
-	Settings m_settings;
+    Settings m_settings;
 };
 
 
@@ -71,11 +70,6 @@ inline void MicSwitcher::show()
 	m_trayIcon->show();
 }
 
-inline void MicSwitcher::setShowNotifications(const bool show)
-{
-	m_settings.setUseNotifications(show);
-}
-
 inline void MicSwitcher::disableMic()
 {
 	setMicEnabled(false);
@@ -84,11 +78,6 @@ inline void MicSwitcher::disableMic()
 inline void MicSwitcher::enableMic()
 {
 	setMicEnabled(true);
-}
-
-inline void MicSwitcher::switchMic()
-{
-	setMicEnabled(!m_isMicEnabled);
 }
 
 #endif // MICSWITCHER_H
