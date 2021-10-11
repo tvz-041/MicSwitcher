@@ -122,7 +122,7 @@ void Settings::saveToDisk() const
 
     m_settings->setValue("General/sAppVersion", applicationVersionToString());
     m_settings->setValue("General/sLang", *m_lang);
-    m_settings->setValue("General/fMicVolume", (float) m_micVolume);
+    m_settings->setValue("General/fMicVolume", QString::number(m_micVolume, 'f', 2));
     m_settings->setValue("General/bOverrideVolume", m_overrideVolume);
     m_settings->setValue("General/iPushDelay", m_pushDelay);
     m_settings->setValue("General/iReleaseDelay", m_releaseDelay);
