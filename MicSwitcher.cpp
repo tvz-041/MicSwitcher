@@ -150,7 +150,7 @@ void MicSwitcher::setSwitchMode(const Settings::SwitchMode mode)
         break;
 
         case Settings::PushToTalk:
-            if (m_hotkeyCounter > 0) {
+            if (m_hotkeyCounter == 0) {
                 disableMic();
             }
         break;
