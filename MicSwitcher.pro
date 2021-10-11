@@ -15,6 +15,7 @@ SOURCES += \
     MicSwitcher.cpp \
     Settings.cpp \
     SettingsDialog.cpp \
+    applicationVersion.cpp \
     main.cpp
 
 HEADERS += \
@@ -23,7 +24,8 @@ HEADERS += \
     MicHandler.h \
     MicSwitcher.h \
     Settings.h \
-    SettingsDialog.h
+    SettingsDialog.h \
+    applicationVersion.h
 
 FORMS += \
     SettingsDialog.ui
