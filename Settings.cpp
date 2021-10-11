@@ -7,9 +7,14 @@
 #include "Settings.h"
 
 template<class Enum>
-Enum enumFromString(const QString &string)
+Enum enumFromString(const QString &string, const Enum defaultValue)
 {
-    return Enum(QMetaEnum::fromType<Enum>().keyToValue(string.toStdString().c_str()));
+    int key = QMetaEnum::fromType<Enum>().keyToValue(string.toStdString().c_str());
+    if (key == -1) {
+        key = defaultValue;
+    }
+
+    return Enum(key);
 }
 
 template<class Enum>
@@ -32,7 +37,7 @@ Settings::Settings(const Settings &other) :
     m_lang(new QString(*other.m_lang))
 {
     m_micStateChangeOnStartup   = other.m_micStateChangeOnStartup;
-    m_operatingMode             = other.m_operatingMode;
+    m_switchMode             = other.m_switchMode;
     m_notificationsFlags        = other.m_notificationsFlags;
     m_trayIconStyle             = other.m_trayIconStyle;
 
@@ -95,11 +100,11 @@ void Settings::loadFromDisk()
     }
 
     if (readValue(value, "General/sMicStateChangeOnStartup")) {
-        m_micStateChangeOnStartup = enumFromString<MicStateChange>(value.toString());
+        m_micStateChangeOnStartup = enumFromString<MicStateChange>(value.toString(), m_micStateChangeOnStartup);
     }
 
-    if (readValue(value, "General/sOperatingMode")) {
-        m_operatingMode = enumFromString<OperatingMode>(value.toString());
+    if (readValue(value, "General/sSwitchMode")) {
+        m_switchMode = enumFromString<SwitchMode>(value.toString(), m_switchMode);
     }
 
     if (readValue(value, "General/iNotificationsFlags")) {
@@ -107,7 +112,7 @@ void Settings::loadFromDisk()
     }
 
     if (readValue(value, "General/sTrayIconStyle")) {
-        m_trayIconStyle = enumFromString<IconStyle>(value.toString());
+        m_trayIconStyle = enumFromString<IconStyle>(value.toString(), m_trayIconStyle);
     }
 }
 
@@ -122,7 +127,7 @@ void Settings::saveToDisk() const
     m_settings->setValue("General/iPushDelay", m_pushDelay);
     m_settings->setValue("General/iReleaseDelay", m_releaseDelay);
     m_settings->setValue("General/sMicStateChangeOnStartup", enumToString<MicStateChange>(m_micStateChangeOnStartup));
-    m_settings->setValue("General/sOperatingMode", enumToString<OperatingMode>(m_operatingMode));
+    m_settings->setValue("General/sSwitchMode", enumToString<SwitchMode>(m_switchMode));
     m_settings->setValue("General/iNotificationsFlags", (int) m_notificationsFlags);
     m_settings->setValue("General/sTrayIconStyle", enumToString<IconStyle>(m_trayIconStyle));
 
@@ -136,7 +141,7 @@ Settings &Settings::operator=(const Settings &other)
     }
 
     m_micStateChangeOnStartup   = other.m_micStateChangeOnStartup;
-    m_operatingMode             = other.m_operatingMode;
+    m_switchMode             = other.m_switchMode;
     m_notificationsFlags        = other.m_notificationsFlags;
     m_trayIconStyle             = other.m_trayIconStyle;
 
@@ -153,7 +158,7 @@ Settings &Settings::operator=(const Settings &other)
 bool Settings::operator==(const Settings &other) const
 {
     return m_micStateChangeOnStartup    == other.m_micStateChangeOnStartup
-        && m_operatingMode              == other.m_operatingMode
+        && m_switchMode              == other.m_switchMode
         && m_notificationsFlags         == other.m_notificationsFlags
         && m_trayIconStyle              == other.m_trayIconStyle
 

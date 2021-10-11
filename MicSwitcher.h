@@ -34,6 +34,7 @@ public slots:
 	void switchMic();
 	void setMicEnabled(const bool enabled);
     void setOverrideVolume(const bool override = true);
+    void setSwitchMode(const Settings::SwitchMode mode);
     void setShowNotifications(const bool show = true);
 	void setTrayIconStyle(const Settings::IconStyle style);
 
@@ -53,6 +54,8 @@ private:
     QTimer *m_timer = nullptr;
     QMetaObject::Connection m_timerConnection;
 	QSystemTrayIcon *m_trayIcon = nullptr;
+    QMenu *m_trayIconStyleMenu = nullptr;
+    QMenu *m_switchModeMenu = nullptr;
     QAction *m_enableMicAction = nullptr;
     QAction *m_overrideVolumeAction = nullptr;
     QAction *m_showNotificationsAction = nullptr;

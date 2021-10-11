@@ -66,6 +66,7 @@ void MicSwitcher::loadSettings()
 {
     setMicEnabled(m_settings.isMicEnabled());
     setOverrideVolume(m_settings.overrideVolume());
+    setSwitchMode(m_settings.switchMode());
     setShowNotifications(m_settings.showNotifications());
     setTrayIconStyle(m_settings.trayIconStyle());
 }
@@ -139,6 +140,37 @@ void MicSwitcher::setOverrideVolume(const bool override)
     onMicVolumeChanged(MicHandler::instance().micVolume());
 }
 
+void MicSwitcher::setSwitchMode(const Settings::SwitchMode mode)
+{
+    m_settings.setSwitchMode(mode);
+
+    switch (mode) {
+        case Settings::PushToSwitch:
+        break;
+
+        case Settings::ReleaseToSwitch:
+        break;
+
+        case Settings::PushToTalk:
+            if (m_hotkeyCounter > 0) {
+                disableMic();
+            }
+        break;
+
+        case Settings::PushToMute:
+            if (m_hotkeyCounter == 0) {
+                enableMic();
+            }
+        break;
+    }
+
+    int actionIndex = 0;
+    for (QAction *action : m_switchModeMenu->actions()) {
+        action->setChecked(actionIndex == mode);
+        ++actionIndex;
+    }
+}
+
 void MicSwitcher::setShowNotifications(const bool show)
 {
     m_settings.setShowNotifications(show);
@@ -149,6 +181,12 @@ void MicSwitcher::setTrayIconStyle(const Settings::IconStyle style)
 {
     m_settings.setTrayIconStyle(style);
     updateTrayIcon();
+
+    int actionIndex = 0;
+    for (QAction *action : m_trayIconStyleMenu->actions()) {
+        action->setChecked(actionIndex == style);
+        ++actionIndex;
+    }
 }
 
 //private slots:
@@ -158,30 +196,68 @@ void MicSwitcher::onHotkeyPressed()
     stopTimer();
 	++m_hotkeyCounter;
 
-	if (m_hotkeyCounter == 1) {
-        if (m_settings.showNotifications()) {
-			m_trayIcon->showMessage(tr("Microphone Enabled"), "", iconWithCurrentStyle(":/Resources/Icons/MicUnmuted"));
-		}
+    switch (m_settings.switchMode()) {
+        case Settings::PushToSwitch:
+            startTimer(m_settings.pushDelay(), [this](){
+                switchMic();
+            });
+        break;
 
-        startTimer(m_settings.pushDelay(), [this](){
-            setMicEnabled(true);
-        });
-	}
+        case Settings::ReleaseToSwitch:
+        break;
+
+        case Settings::PushToTalk:
+            if (m_hotkeyCounter == 1) {
+                startTimer(m_settings.pushDelay(), [this](){
+                    enableMic();
+                });
+            }
+        break;
+
+        case Settings::PushToMute:
+            if (m_hotkeyCounter == 1) {
+                startTimer(m_settings.pushDelay(), [this](){
+                    disableMic();
+                });
+            }
+        break;
+    }
+
+
 }
 
 void MicSwitcher::onHotkeyReleased()
 {
 	--m_hotkeyCounter;
 
-	if (m_hotkeyCounter == 0) {
-        if (m_settings.showNotifications()) {
-			m_trayIcon->showMessage(tr("Microphone Disabled"), "", iconWithCurrentStyle(":/Resources/Icons/MicMuted"));
-		}
 
-        startTimer(m_settings.releaseDelay(), [this](){
-            setMicEnabled(false);
-        });
-	}
+
+    switch (m_settings.switchMode()) {
+        case Settings::PushToSwitch:
+        break;
+
+        case Settings::ReleaseToSwitch:
+            startTimer(m_settings.releaseDelay(), [this](){
+                switchMic();
+            });
+        break;
+
+        case Settings::PushToTalk:
+            if (m_hotkeyCounter == 0) {
+                startTimer(m_settings.releaseDelay(), [this](){
+                    disableMic();
+                });
+            }
+        break;
+
+        case Settings::PushToMute:
+            if (m_hotkeyCounter == 0) {
+                startTimer(m_settings.releaseDelay(), [this](){
+                    enableMic();
+                });
+            }
+        break;
+    }
 }
 
 void MicSwitcher::onMicSwitched(const bool isMicEnabled)
@@ -218,7 +294,6 @@ void MicSwitcher::initTray()
 	updateTrayIcon();
 
 	QMenu *trayContextMenu = new QMenu();
-    QMenu *menu;
 
     m_enableMicAction = trayContextMenu->addAction("", this,  &MicSwitcher::switchMic);
 
@@ -226,13 +301,31 @@ void MicSwitcher::initTray()
                                         &MicSwitcher::setOverrideVolume);
     m_overrideVolumeAction->setCheckable(true);
 
+    m_switchModeMenu = trayContextMenu->addMenu(tr("Switch mode"));
+    m_switchModeMenu->addAction(tr("Push to switch"), [this](){
+        setSwitchMode(Settings::SwitchMode::PushToSwitch);
+    })->setCheckable(true);
+    m_switchModeMenu->addAction(tr("Release to switch"), [this](){
+        setSwitchMode(Settings::SwitchMode::ReleaseToSwitch);
+    })->setCheckable(true);
+    m_switchModeMenu->addAction(tr("Push to talk"), [this](){
+        setSwitchMode(Settings::SwitchMode::PushToTalk);
+    })->setCheckable(true);
+    m_switchModeMenu->addAction(tr("Push to mute"), [this](){
+        setSwitchMode(Settings::SwitchMode::PushToMute);
+    })->setCheckable(true);
+
     m_showNotificationsAction = trayContextMenu->addAction(tr("Show notifications"), this,
                                         &MicSwitcher::setShowNotifications);
     m_showNotificationsAction->setCheckable(true);
 
-	menu = trayContextMenu->addMenu(tr("Icon Style"));
-	menu->addAction(tr("Light"), [this](){setTrayIconStyle(Settings::IconStyle::Light);});
-	menu->addAction(tr("Dark"), [this](){setTrayIconStyle(Settings::IconStyle::Dark);});
+    m_trayIconStyleMenu = trayContextMenu->addMenu(tr("Icon Style"));
+    m_trayIconStyleMenu->addAction(tr("Light"), [this](){
+        setTrayIconStyle(Settings::IconStyle::Light);
+    })->setCheckable(true);
+    m_trayIconStyleMenu->addAction(tr("Dark"), [this](){
+        setTrayIconStyle(Settings::IconStyle::Dark);
+    })->setCheckable(true);
 
 	//TODO: implement settings dialog
 	//trayContextMenu->addAction(tr("Settings"), this,  &MicSwitcher::showSettingsDialog);
@@ -265,7 +358,15 @@ void MicSwitcher::updateTrayIcon()
 {
     if (m_settings.isMicEnabled()) {
 		m_trayIcon->setIcon(iconWithCurrentStyle(":/Resources/Icons/MicUnmuted"));
+
+        if (m_settings.showNotifications()) {
+            m_trayIcon->showMessage(tr("Microphone Enabled"), "", m_trayIcon->icon());
+        }
 	} else {
 		m_trayIcon->setIcon(iconWithCurrentStyle(":/Resources/Icons/MicMuted"));
+
+        if (m_settings.showNotifications()) {
+            m_trayIcon->showMessage(tr("Microphone Disabled"), "", m_trayIcon->icon());
+        }
 	}
 }

@@ -18,13 +18,14 @@ public:
 	};
     Q_ENUM(MicStateChange)
 
-	enum OperatingMode
+    enum SwitchMode
 	{
-		Switch,
+        PushToSwitch,
+        ReleaseToSwitch,
 		PushToTalk,
 		PushToMute
 	};
-    Q_ENUM(OperatingMode)
+    Q_ENUM(SwitchMode)
 
 	enum IconStyle
 	{
@@ -59,7 +60,7 @@ public:
     inline int releaseDelay() const;
 
     inline MicStateChange micStateChangeOnStartup() const;
-    inline OperatingMode operatingMode() const;
+    inline SwitchMode switchMode() const;
 
     inline bool showNotifications() const;
 	inline bool showNotificationsOnSelfSwitches() const;
@@ -77,7 +78,7 @@ public:
     inline void setReleaseDelay(const int delayInMsec);
 
     inline void setMicStateChangeOnStartup(MicStateChange stateChange);
-    inline void setOperatingMode(OperatingMode mode);
+    inline void setSwitchMode(SwitchMode mode);
 
     inline void setShowNotifications(const bool enabled = true);
 	inline void setShowNotificationsOnSelfSwitches(const bool enabled = true);
@@ -105,7 +106,7 @@ private:
     int m_pushDelay                             = 0;
     int m_releaseDelay                          = 0;
     MicStateChange m_micStateChangeOnStartup    = MicStateChange::NoChange;
-    OperatingMode m_operatingMode				= OperatingMode::Switch;
+    SwitchMode m_switchMode                     = SwitchMode::PushToSwitch;
     NotificationsFlags m_notificationsFlags;
     IconStyle m_trayIconStyle                   = IconStyle::Light;
 };
@@ -149,9 +150,9 @@ inline Settings::MicStateChange Settings::micStateChangeOnStartup() const
     return m_micStateChangeOnStartup;
 }
 
-inline Settings::OperatingMode Settings::operatingMode() const
+inline Settings::SwitchMode Settings::switchMode() const
 {
-    return m_operatingMode;
+    return m_switchMode;
 }
 
 inline bool Settings::showNotifications() const
@@ -223,9 +224,9 @@ inline void Settings::setMicStateChangeOnStartup(MicStateChange stateChange)
     m_micStateChangeOnStartup = stateChange;
 }
 
-inline void Settings::setOperatingMode(OperatingMode mode)
+inline void Settings::setSwitchMode(SwitchMode mode)
 {
-    m_operatingMode = mode;
+    m_switchMode = mode;
 }
 
 inline void Settings::setShowNotifications(const bool enabled)
