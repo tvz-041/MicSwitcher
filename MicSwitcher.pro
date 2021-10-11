@@ -13,6 +13,7 @@ SOURCES += \
     HotkeyHandler.cpp \
     MicHandler.cpp \
     MicSwitcher.cpp \
+    Settings.cpp \
     SettingsDialog.cpp \
     main.cpp
 
@@ -21,6 +22,7 @@ HEADERS += \
     HotkeyHandler.h \
     MicHandler.h \
     MicSwitcher.h \
+    Settings.h \
     SettingsDialog.h
 
 FORMS += \
