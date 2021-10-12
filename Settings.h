@@ -60,6 +60,7 @@ public:
     inline int releaseDelay() const;
 
     inline MicStateChange micStateChangeOnStartup() const;
+    inline MicStateChange micStateChangeOnExit() const;
     inline SwitchMode switchMode() const;
 
     inline bool showNotifications() const;
@@ -78,6 +79,7 @@ public:
     inline void setReleaseDelay(const int delayInMsec);
 
     inline void setMicStateChangeOnStartup(MicStateChange stateChange);
+    inline void setMicStateChangeOnExit(MicStateChange stateChange);
     inline void setSwitchMode(SwitchMode mode);
 
     inline void setShowNotifications(const bool enabled = true);
@@ -106,6 +108,7 @@ private:
     int m_pushDelay                             = 0;
     int m_releaseDelay                          = 0;
     MicStateChange m_micStateChangeOnStartup    = MicStateChange::NoChange;
+    MicStateChange m_micStateChangeOnExit       = MicStateChange::SetEnable;
     SwitchMode m_switchMode                     = SwitchMode::PushToSwitch;
     NotificationsFlags m_notificationsFlags;
     IconStyle m_trayIconStyle                   = IconStyle::Light;
@@ -148,6 +151,11 @@ inline int Settings::releaseDelay() const
 inline Settings::MicStateChange Settings::micStateChangeOnStartup() const
 {
     return m_micStateChangeOnStartup;
+}
+
+inline Settings::MicStateChange Settings::micStateChangeOnExit() const
+{
+    return m_micStateChangeOnExit;
 }
 
 inline Settings::SwitchMode Settings::switchMode() const
@@ -222,6 +230,11 @@ inline void Settings::setReleaseDelay(const int delayInMsec)
 inline void Settings::setMicStateChangeOnStartup(MicStateChange stateChange)
 {
     m_micStateChangeOnStartup = stateChange;
+}
+
+inline void Settings::setMicStateChangeOnExit(MicStateChange stateChange)
+{
+    m_micStateChangeOnExit = stateChange;
 }
 
 inline void Settings::setSwitchMode(SwitchMode mode)

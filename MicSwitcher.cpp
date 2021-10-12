@@ -47,19 +47,7 @@ MicSwitcher::MicSwitcher() :
     }
 
     loadSettings();
-
-    switch(m_settings.micStateChangeOnStartup()) {
-        case Settings::MicStateChange::SetEnable:
-            enableMic();
-        break;
-
-        case Settings::MicStateChange::SetDisable:
-            disableMic();
-        break;
-
-        default:
-        break;
-    }
+    setMicState(m_settings.micStateChangeOnStartup());
 }
 
 void MicSwitcher::loadSettings()
@@ -83,6 +71,23 @@ MicSwitcher::~MicSwitcher()
 {
     stopTimer();
     m_settings.saveToDisk();
+    setMicState(m_settings.micStateChangeOnExit());
+}
+
+void MicSwitcher::setMicState(const Settings::MicStateChange change)
+{
+    switch(change) {
+        case Settings::MicStateChange::SetEnable:
+            enableMic();
+        break;
+
+        case Settings::MicStateChange::SetDisable:
+            disableMic();
+        break;
+
+        case Settings::MicStateChange::NoChange:
+        break;
+    }
 }
 
 void MicSwitcher::startTimer(const int msecs, std::function<void()> timeoutFunction)

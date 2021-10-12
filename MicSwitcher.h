@@ -23,6 +23,7 @@ public:
     void loadSettings();
     void loadSettings(const Settings &settings);
 
+    void setMicState(const Settings::MicStateChange change);
     void startTimer(const int msecs, std::function<void()> timeoutFunction);
     void stopTimer();
 

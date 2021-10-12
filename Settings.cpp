@@ -37,7 +37,8 @@ Settings::Settings(const Settings &other) :
     m_lang(new QString(*other.m_lang))
 {
     m_micStateChangeOnStartup   = other.m_micStateChangeOnStartup;
-    m_switchMode             = other.m_switchMode;
+    m_micStateChangeOnExit      = other.m_micStateChangeOnExit;
+    m_switchMode                = other.m_switchMode;
     m_notificationsFlags        = other.m_notificationsFlags;
     m_trayIconStyle             = other.m_trayIconStyle;
 
@@ -103,6 +104,10 @@ void Settings::loadFromDisk()
         m_micStateChangeOnStartup = enumFromString<MicStateChange>(value.toString(), m_micStateChangeOnStartup);
     }
 
+    if (readValue(value, "General/sMicStateChangeOnExit")) {
+        m_micStateChangeOnExit = enumFromString<MicStateChange>(value.toString(), m_micStateChangeOnExit);
+    }
+
     if (readValue(value, "General/sSwitchMode")) {
         m_switchMode = enumFromString<SwitchMode>(value.toString(), m_switchMode);
     }
@@ -122,12 +127,13 @@ void Settings::saveToDisk() const
 
     m_settings->setValue("General/sAppVersion", applicationVersionToString());
     m_settings->setValue("General/sLang", *m_lang);
+    m_settings->setValue("General/sSwitchMode", enumToString<SwitchMode>(m_switchMode));
     m_settings->setValue("General/fMicVolume", QString::number(m_micVolume, 'f', 2));
     m_settings->setValue("General/bOverrideVolume", m_overrideVolume);
     m_settings->setValue("General/iPushDelay", m_pushDelay);
     m_settings->setValue("General/iReleaseDelay", m_releaseDelay);
     m_settings->setValue("General/sMicStateChangeOnStartup", enumToString<MicStateChange>(m_micStateChangeOnStartup));
-    m_settings->setValue("General/sSwitchMode", enumToString<SwitchMode>(m_switchMode));
+    m_settings->setValue("General/sMicStateChangeOnExit", enumToString<MicStateChange>(m_micStateChangeOnExit));
     m_settings->setValue("General/iNotificationsFlags", (int) m_notificationsFlags);
     m_settings->setValue("General/sTrayIconStyle", enumToString<IconStyle>(m_trayIconStyle));
 
@@ -141,7 +147,8 @@ Settings &Settings::operator=(const Settings &other)
     }
 
     m_micStateChangeOnStartup   = other.m_micStateChangeOnStartup;
-    m_switchMode             = other.m_switchMode;
+    m_micStateChangeOnExit      = other.m_micStateChangeOnExit;
+    m_switchMode                = other.m_switchMode;
     m_notificationsFlags        = other.m_notificationsFlags;
     m_trayIconStyle             = other.m_trayIconStyle;
 
@@ -157,10 +164,11 @@ Settings &Settings::operator=(const Settings &other)
 
 bool Settings::operator==(const Settings &other) const
 {
-    return m_micStateChangeOnStartup    == other.m_micStateChangeOnStartup
+    return m_micStateChangeOnStartup == other.m_micStateChangeOnStartup
+        && m_micStateChangeOnExit    == other.m_micStateChangeOnExit
         && m_switchMode              == other.m_switchMode
-        && m_notificationsFlags         == other.m_notificationsFlags
-        && m_trayIconStyle              == other.m_trayIconStyle
+        && m_notificationsFlags      == other.m_notificationsFlags
+        && m_trayIconStyle           == other.m_trayIconStyle
 
         && m_isMicEnabled   == other.m_isMicEnabled
         && m_micVolume      == other.m_micVolume
