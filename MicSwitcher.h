@@ -23,7 +23,9 @@ public:
     void loadSettings();
     void loadSettings(const Settings &settings);
 
-    void setMicState(const Settings::MicStateChange change);
+    void setMicState(const Settings::MicStateChange stateChange);
+    void setMicStateChangeOnStartup(const Settings::MicStateChange stateChange);
+    void setMicStateChangeOnExit(const Settings::MicStateChange stateChange);
     void startTimer(const int msecs, std::function<void()> timeoutFunction);
     void stopTimer();
 
@@ -51,12 +53,15 @@ private:
 	void initTray();
 	QIcon iconWithCurrentStyle(const QString &iconPath);
 	void updateTrayIcon();
+    void checkActionInMenu(QMenu *menu, const int actionIndex, const bool uncheckOtherActions = true);
 
     QTimer *m_timer = nullptr;
     QMetaObject::Connection m_timerConnection;
 	QSystemTrayIcon *m_trayIcon = nullptr;
     QMenu *m_trayIconStyleMenu = nullptr;
     QMenu *m_switchModeMenu = nullptr;
+    QMenu *m_micStateChangeOnStartupMenu = nullptr;
+    QMenu *m_micStateChangeOnExitMenu = nullptr;
     QAction *m_enableMicAction = nullptr;
     QAction *m_overrideVolumeAction = nullptr;
     QAction *m_showNotificationsAction = nullptr;

@@ -53,8 +53,10 @@ MicSwitcher::MicSwitcher() :
 void MicSwitcher::loadSettings()
 {
     setMicEnabled(m_settings.isMicEnabled());
-    setOverrideVolume(m_settings.overrideVolume());
     setSwitchMode(m_settings.switchMode());
+    setOverrideVolume(m_settings.overrideVolume());
+    setMicStateChangeOnStartup(m_settings.micStateChangeOnStartup());
+    setMicStateChangeOnExit(m_settings.micStateChangeOnExit());
     setShowNotifications(m_settings.showNotifications());
     setTrayIconStyle(m_settings.trayIconStyle());
 }
@@ -74,9 +76,9 @@ MicSwitcher::~MicSwitcher()
     setMicState(m_settings.micStateChangeOnExit());
 }
 
-void MicSwitcher::setMicState(const Settings::MicStateChange change)
+void MicSwitcher::setMicState(const Settings::MicStateChange stateChange)
 {
-    switch(change) {
+    switch(stateChange) {
         case Settings::MicStateChange::SetEnable:
             enableMic();
         break;
@@ -88,6 +90,18 @@ void MicSwitcher::setMicState(const Settings::MicStateChange change)
         case Settings::MicStateChange::NoChange:
         break;
     }
+}
+
+void MicSwitcher::setMicStateChangeOnStartup(const Settings::MicStateChange stateChange)
+{
+    m_settings.setMicStateChangeOnStartup(stateChange);
+    checkActionInMenu(m_micStateChangeOnStartupMenu, stateChange);
+}
+
+void MicSwitcher::setMicStateChangeOnExit(const Settings::MicStateChange stateChange)
+{
+    m_settings.setMicStateChangeOnExit(stateChange);
+    checkActionInMenu(m_micStateChangeOnExitMenu, stateChange);
 }
 
 void MicSwitcher::startTimer(const int msecs, std::function<void()> timeoutFunction)
@@ -167,11 +181,7 @@ void MicSwitcher::setSwitchMode(const Settings::SwitchMode mode)
         break;
     }
 
-    int actionIndex = 0;
-    for (QAction *action : m_switchModeMenu->actions()) {
-        action->setChecked(actionIndex == mode);
-        ++actionIndex;
-    }
+    checkActionInMenu(m_switchModeMenu, mode);
 }
 
 void MicSwitcher::setShowNotifications(const bool show)
@@ -184,12 +194,7 @@ void MicSwitcher::setTrayIconStyle(const Settings::IconStyle style)
 {
     m_settings.setTrayIconStyle(style);
     updateTrayIcon();
-
-    int actionIndex = 0;
-    for (QAction *action : m_trayIconStyleMenu->actions()) {
-        action->setChecked(actionIndex == style);
-        ++actionIndex;
-    }
+    checkActionInMenu(m_trayIconStyleMenu, style);
 }
 
 //private slots:
@@ -300,10 +305,6 @@ void MicSwitcher::initTray()
 
     m_enableMicAction = trayContextMenu->addAction("", this,  &MicSwitcher::switchMic);
 
-    m_overrideVolumeAction = trayContextMenu->addAction(tr("Override volume"), this,
-                                        &MicSwitcher::setOverrideVolume);
-    m_overrideVolumeAction->setCheckable(true);
-
     m_switchModeMenu = trayContextMenu->addMenu(tr("Switch mode"));
     m_switchModeMenu->addAction(tr("Push to switch"), [this](){
         setSwitchMode(Settings::SwitchMode::PushToSwitch);
@@ -316,6 +317,34 @@ void MicSwitcher::initTray()
     })->setCheckable(true);
     m_switchModeMenu->addAction(tr("Push to mute"), [this](){
         setSwitchMode(Settings::SwitchMode::PushToMute);
+    })->setCheckable(true);
+
+    m_overrideVolumeAction = trayContextMenu->addAction(tr("Override volume"), this,
+                                        &MicSwitcher::setOverrideVolume);
+    m_overrideVolumeAction->setCheckable(true);
+
+    QMenu *micStateChangeMenu = trayContextMenu->addMenu(tr("Microphone state change"));
+
+    m_micStateChangeOnStartupMenu = micStateChangeMenu->addMenu(tr("On startup"));
+    m_micStateChangeOnStartupMenu->addAction(tr("No change"), [this](){
+        setMicStateChangeOnStartup(Settings::MicStateChange::NoChange);
+    })->setCheckable(true);
+    m_micStateChangeOnStartupMenu->addAction(tr("Set enabled"), [this](){
+        setMicStateChangeOnStartup(Settings::MicStateChange::SetEnable);
+    })->setCheckable(true);
+    m_micStateChangeOnStartupMenu->addAction(tr("Set disabled"), [this](){
+        setMicStateChangeOnStartup(Settings::MicStateChange::SetDisable);
+    })->setCheckable(true);
+
+    m_micStateChangeOnExitMenu = micStateChangeMenu->addMenu(tr("On exit"));
+    m_micStateChangeOnExitMenu->addAction(tr("No change"), [this](){
+        setMicStateChangeOnExit(Settings::MicStateChange::NoChange);
+    })->setCheckable(true);
+    m_micStateChangeOnExitMenu->addAction(tr("Set enabled"), [this](){
+        setMicStateChangeOnExit(Settings::MicStateChange::SetEnable);
+    })->setCheckable(true);
+    m_micStateChangeOnExitMenu->addAction(tr("Set disabled"), [this](){
+        setMicStateChangeOnExit(Settings::MicStateChange::SetDisable);
     })->setCheckable(true);
 
     m_showNotificationsAction = trayContextMenu->addAction(tr("Show notifications"), this,
@@ -372,4 +401,21 @@ void MicSwitcher::updateTrayIcon()
             m_trayIcon->showMessage(tr("Microphone Disabled"), "", m_trayIcon->icon());
         }
 	}
+}
+
+void MicSwitcher::checkActionInMenu(QMenu *menu, const int actionIndex, const bool uncheckOtherActions)
+{
+    if (!menu) {
+        return;
+    }
+
+    if (uncheckOtherActions) {
+        int i = 0;
+        for (QAction *action : menu->actions()) {
+            action->setChecked(i == actionIndex);
+            ++i;
+        }
+    } else {
+        menu->actions().at(actionIndex)->setChecked(true);
+    }
 }
