@@ -25,7 +25,7 @@ constexpr int microApplicationVersion(int version)
 
 constexpr int currentApplicationVersion()
 {
-    return applicationVersion(0, 1, 1);
+    return applicationVersion(0, 1, 2);
 }
 
 QString applicationVersionToString(const int version = currentApplicationVersion());
